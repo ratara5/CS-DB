@@ -1,0 +1,49 @@
+------------------------------------------------------------------------------------------------------------------------
+INSERT INTO FactInternetSales (ProductKey, OrderDateKey, CustomerKey, PromotionKey, CurrencyKey, SalesTerritoryKey, RevisionNumber, OrderQuantity, UnitPrice, ExtendedAmount, UnitPriceDiscountPct, DiscountAmount, ProductStandardCost, TotalProductCost, SalesAmount, TaxAmt, Freight, CarrierTrackingNumber, CustomerPONumber)
+SELECT DISTINCT ProductKey, DayKey, CustomerKey, PromotionKey, CurrencyKey, SalesTerritoryKey, ssoh.RevisionNumber, ssod.OrderQty, ssod.UnitPrice, ssod.OrderQty*ssod*UnitPrice, ssod.UnitPriceDiscountPct, ssod.OrderQty*ssod.UnitPriceDiscount, pp.StandardCost, ssod.OrderQty*pp.StandardCost, ssod.LineTotal, ssoh.TaxAmt, sshoh.Freight, ssod.CarrierTrackingNumber, ppp.PhoneNumber
+FROM AdventureWorks.Sales.SalesOrderHeader AS ssoh INNER JOIN AdventureWorks.Sales.SalesOrderDetail AS ssod ON ssoh.SalesOrderID=ssod.SalesOrderID AND AdventureWorks.Production.Product AS pp ON pp.ProductID=ssod.ProductID
+           INNER JOIN AdventureWorks.Sales.Customer AS sc ON sc.CustomerID=ssoh.CustomerID INNER JOIN  AdventureWorks.Person.PersonPhone AS ppp ON ppp.BusinessEntity=sc.PersonID
+INNER JOIN DimCurrency AS du ON du.CurrencyKey=ssoh.CurrencyRateID
+INNER JOIN DimCustomer AS dc ON dc.CustomerKey=ssoh.CustomerID
+INNER JOIN DimDate dd ON dd.DateKey=ssoh.SalesOrderID
+INNER JOIN DimEmployee de ON de.EmployeeKey=ssoh.SalesPersonID
+-- No se coloca DimGeography ON
+INNER JOIN DimProduct ON DimProduct.ProductKey=ssod.ProductID
+INNER JOIN DimPromotion AS dm ON dm.PromotionKey=ssod.SpecialOfferID
+WHERE (ssoh.SalesOrderID IS NOT NULL)
+
+
+-----------------------------TRANSPONER FILAS Y COLUMNAS------------------------------------------
+
+
+Para generar descripciones por producto en todos los idiomas::=
+
+SELECT Production.Product.ProductID, Production.Culture.Name, Production.Product.Name AS Expr1, Production.ProductModel.Name AS Expr2, Production.ProductDescription.Description
+FROM Production.ProductModelProductDescriptionCulture 
+INNER JOIN Production.Culture ON Production.ProductModelProductDescriptionCulture.CultureID = Production.Culture.CultureID 
+INNER JOIN Production.ProductDescription ON Production.ProductModelProductDescriptionCulture.ProductDescriptionID = Production.ProductDescription.ProductDescriptionID 
+INNER JOIN Production.ProductModel ON Production.ProductModelProductDescriptionCulture.ProductModelID = Production.ProductModel.ProductModelID 
+INNER JOIN Production.Product ON Production.ProductModel.ProductModelID = Production.Product.ProductModelID 
+AND Production.ProductModel.ProductModelID = Production.Product.ProductModelID 
+AND Production.ProductModel.ProductModelID = Production.Product.ProductModelID 
+AND Production.ProductModel.ProductModelID = Production.Product.ProductModelID 
+AND Production.ProductModel.ProductModelID = Production.Product.ProductModelID
+
+FUNCIONA IGUAL QUE ESTO:
+
+SELECT Production.Product.ProductID, Production.Culture.Name, Production.Product.Name AS Expr1, Production.ProductModel.Name AS Expr2, Production.ProductDescription.Description
+FROM Production.ProductModelProductDescriptionCulture 
+INNER JOIN Production.Culture ON Production.ProductModelProductDescriptionCulture.CultureID = Production.Culture.CultureID 
+INNER JOIN Production.ProductDescription ON Production.ProductModelProductDescriptionCulture.ProductDescriptionID = Production.ProductDescription.ProductDescriptionID 
+INNER JOIN Production.ProductModel ON Production.ProductModelProductDescriptionCulture.ProductModelID = Production.ProductModel.ProductModelID 
+INNER JOIN Production.Product ON Production.ProductModel.ProductModelID = Production.Product.ProductModelID 
+
+---------------------------------------------------------------------------------------------------------------
+
+Para la transposición::=
+
+SELECT * 
+FROM DescripcionesIdiomas 
+PIVOT(MAX(Descr)
+FOR CultureName IN ([English], [Arabic], [Hebrew], [Thai], [Chinese], [French])) AS Pvt
+ORDER BY ProductID

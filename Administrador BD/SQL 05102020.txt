@@ -1,0 +1,120 @@
+Crear Tabla con los datos de interés
+
+SELECT Production.Product.ProductID, Production.ProductModelProductDescriptionCulture.CultureID, Production.ProductDescription.Description
+FROM Production.ProductModelProductDescriptionCulture 
+INNER JOIN Production.ProductDescription 
+ON Production.ProductModelProductDescriptionCulture.ProductDescriptionID = Production.ProductDescription.ProductDescriptionID 
+INNER JOIN Production.Product 
+ON Production.ProductModelProductDescriptionCulture.ProductModelID = Production.Product.ProductModelID
+
+Crear consulta campos a columnas
+
+SELECT CultureID, ['en'],['ar'],['fr'],['th'],['he'], ['zh-cht']
+FROM TableNewCulture
+PIVOT
+                      (
+						AVG(ProductID)
+						FOR CultureID IN (['en'],['ar'],['fr'],['th'],['he'], ['zh-cht'])
+					  ) AS P
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Generar tablas por columnas
+
+SELECT Production.Product.ProductID, Production.ProductModelProductDescriptionCulture.CultureID,
+Production.ProductDescription.Description AS en
+INTO TableNewCultureEn
+FROM Production.ProductModelProductDescriptionCulture 
+INNER JOIN Production.ProductDescription 
+ON Production.ProductModelProductDescriptionCulture.ProductDescriptionID = Production.ProductDescription.ProductDescriptionID 
+INNER JOIN Production.Product 
+ON Production.ProductModelProductDescriptionCulture.ProductModelID = Production.Product.ProductModelID
+WHERE CultureID='en'
+ALTER TABLE TableNewCultureEn
+ADD PRIMARY KEY (ProductID);
+
+SELECT Production.Product.ProductID, Production.ProductModelProductDescriptionCulture.CultureID,
+Production.ProductDescription.Description AS fr
+INTO TableNewCultureFr
+FROM Production.ProductModelProductDescriptionCulture 
+INNER JOIN Production.ProductDescription 
+ON Production.ProductModelProductDescriptionCulture.ProductDescriptionID = Production.ProductDescription.ProductDescriptionID 
+INNER JOIN Production.Product 
+ON Production.ProductModelProductDescriptionCulture.ProductModelID = Production.Product.ProductModelID
+WHERE CultureID='fr'
+ALTER TABLE TableNewCultureFr
+ADD PRIMARY KEY (ProductID);
+
+SELECT Production.Product.ProductID, Production.ProductModelProductDescriptionCulture.CultureID,
+Production.ProductDescription.Description AS Ar
+INTO TableNewCultureAr
+FROM Production.ProductModelProductDescriptionCulture 
+INNER JOIN Production.ProductDescription 
+ON Production.ProductModelProductDescriptionCulture.ProductDescriptionID = Production.ProductDescription.ProductDescriptionID 
+INNER JOIN Production.Product 
+ON Production.ProductModelProductDescriptionCulture.ProductModelID = Production.Product.ProductModelID
+WHERE CultureID='ar'
+ALTER TABLE TableNewCultureAr
+ADD PRIMARY KEY (ProductID);
+
+SELECT Production.Product.ProductID, Production.ProductModelProductDescriptionCulture.CultureID,
+Production.ProductDescription.Description AS Th
+INTO TableNewCultureTh
+FROM Production.ProductModelProductDescriptionCulture 
+INNER JOIN Production.ProductDescription 
+ON Production.ProductModelProductDescriptionCulture.ProductDescriptionID = Production.ProductDescription.ProductDescriptionID 
+INNER JOIN Production.Product 
+ON Production.ProductModelProductDescriptionCulture.ProductModelID = Production.Product.ProductModelID
+WHERE CultureID='th'
+ALTER TABLE TableNewCultureTh
+ADD PRIMARY KEY (ProductID);
+
+SELECT Production.Product.ProductID, Production.ProductModelProductDescriptionCulture.CultureID,
+Production.ProductDescription.Description AS He
+INTO TableNewCultureHe
+FROM Production.ProductModelProductDescriptionCulture 
+INNER JOIN Production.ProductDescription 
+ON Production.ProductModelProductDescriptionCulture.ProductDescriptionID = Production.ProductDescription.ProductDescriptionID 
+INNER JOIN Production.Product 
+ON Production.ProductModelProductDescriptionCulture.ProductModelID = Production.Product.ProductModelID
+WHERE CultureID='he'
+ALTER TABLE TableNewCultureHe
+ADD PRIMARY KEY (ProductID);
+
+SELECT Production.Product.ProductID, Production.ProductModelProductDescriptionCulture.CultureID,
+Production.ProductDescription.Description AS Zhcht
+INTO TableNewCultureZhcht
+FROM Production.ProductModelProductDescriptionCulture 
+INNER JOIN Production.ProductDescription 
+ON Production.ProductModelProductDescriptionCulture.ProductDescriptionID = Production.ProductDescription.ProductDescriptionID 
+INNER JOIN Production.Product 
+ON Production.ProductModelProductDescriptionCulture.ProductModelID = Production.Product.ProductModelID
+WHERE CultureID='zh-cht'
+ALTER TABLE TableNewCultureZhcht
+ADD PRIMARY KEY (ProductID);
+
+
+Consultar descripciones por idiomas en columnas
+
+SELECT TableNewCultureEn.ProductID, TableNewCultureEn.CultureID, TableNewCultureEn.En, TableNewCultureAr.Ar,
+TableNewCultureFr.Fr, TableNewCultureHe.He, TableNewCultureTh.Th, TableNewCultureZhcht.Zhcht
+FROM TableNewCultureEn
+ JOIN TableNewCultureFr
+ON TableNewCultureEn.ProductID=TableNewCultureFr.ProductID
+ JOIN TableNewCultureAr
+ON TableNewCultureEn.ProductID=TableNewCultureAr.ProductID
+ JOIN TableNewCultureTh
+ON TableNewCultureEn.ProductID=TableNewCultureTh.ProductID
+ JOIN TableNewCultureHe
+ON TableNewCultureEn.ProductID=TableNewCultureHe.ProductID
+ JOIN TableNewCultureZhcht
+ON TableNewCultureEn.ProductID=TableNewCultureZhcht.ProductID
+
+
+
+
+
+                      
+
+
+

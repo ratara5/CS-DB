@@ -1,0 +1,108 @@
+ALTER function [dbo].[fn_diaSem](@d int)returns varchar(15)
+begin
+	declare @semana table(codigo int,nombre varchar(15))
+	insert @semana values(1,'Lunes'),(2,'Martes'),
+	(3,'Miércoles'),(4,'Jueves'),(5,'Viernes'),
+	(6,'Sábado'),(7,'Domingo')
+	return(select nombre from @semana where codigo=@d)
+--Descripcion: Retorna el nombre del día en español que se pasa como parametro
+end
+
+
+ALTER function [dbo].[fn_diaSemIngles](@d int)returns varchar(15)
+begin
+	declare @semana table(codigo int,nombre varchar(15))
+	insert @semana values(1,'Monday'),(2,'Tuesday'),
+	(3,'Wednesday'),(4,'Thursday'),(5,'Friday'),
+	(6,'Saturday'),(7,'Sunday')
+	return(select nombre from @semana where codigo=@d)
+--Descripcion: Retorna el nombre del día en inglés que se pasa como parametro
+end
+--------------------------------------------------------------------------
+
+
+ALTER function [dbo].[fn_mes](@m int)returns varchar(15)
+begin
+	declare @mes table(codigo int,nombre varchar(15))
+	insert @mes values(1,'Enero'),(2,'Febrero'),
+	(3,'Marzo'),(4,'Abril'),(5,'Mayo'),(6,'Junio'),
+	(7,'Julio'),(8,'Agosto'),(9,'Setiembre'),
+	(10,'Octubre'),(11,'Noviembre'),(12,'Diciembre')
+	return(select nombre from @mes where codigo=@m)
+--Descripcion: Retorna el nombre del mes en español que se pasa como parametro
+end
+
+
+ALTER function [dbo].[fn_mesIngles](@m int)returns varchar(15)
+begin
+	declare @mes table(codigo int,nombre varchar(15))
+	insert @mes values(1,'January'),(2,'February'),
+	(3,'March'),(4,'April'),(5,'May'),(6,'June'),
+	(7,'July'),(8,'August'),(9,'September'),
+	(10,'October'),(11,'November'),(12,'December')
+	return(select nombre from @mes where codigo=@m)
+--Descripcion: Retorna el nombre del mes en inglés que se pasa como parametro
+end
+
+select dbo.fn_mesIngles(12) -- Ejemplo de llamar la función
+
+----------------------------------------------------------------------------
+
+SELECT DISTINCT
+CONVERT(date, OrderDate) AS 
+FullDateAlternateKey,
+DATEPART(WEEKDAY,OrderDate) AS 
+DayNumberOfWeek,
+dbo.fn_diaSemIngles(DATEPART(WEEKDAY,OrderDate)) AS EnglishDayNameOfWeek,
+dbo.fn_diaSem(DATEPART(WEEKDAY,OrderDate)) AS 
+SpanishDayNameOfWeek,
+dbo.fn_diaSemFrances(DATEPART(WEEKDAY,OrderDate)) AS FrenchDayNameOfWeek,
+DAY(OrderDate) AS 
+DayNumberOfMonth,	
+DATEPART(DAYOFYEAR,OrderDate) AS
+DayNumberOfYear,
+
+DATEPART(DAYOFYEAR,OrderDate)/7 AS
+WeekNumberOfYear,
+
+dbo.fn_mesIngles(MONTH(OrderDate)) AS 
+EnglishMonthName,
+dbo.fn_mes(MONTH(OrderDate)) AS 
+SpanishMonthName,
+dbo.fn_mesFrances(MONTH(OrderDate)) AS 
+FrenchMonthName,
+MONTH(OrderDate) AS
+MonthNumberOfYear,
+
+DATEPART(QUARTER,OrderDate) AS 
+CalendarQuarter, 
+YEAR(OrderDate) AS
+CalendarYear,
+(DATEPART(QUARTER,OrderDate)-1)/2+1 AS
+CalendarSemester,
+
+DATEPART(QUARTER,OrderDate) AS 
+FiscalQuarter, 
+YEAR(OrderDate) AS
+FiscalYear,
+(DATEPART(QUARTER,OrderDate)-1)/2+1 AS
+FiscalSemester
+--año fiscal y calendario son el mismo, no es así siempre
+
+FROM Sales.SalesOrderHeader
+
+-------------------------------------------------------------------------------------
+
+SELECT CONVERT(date, '2015-08-19 00:00:00') --sin el SELECT para la tabla DimDate?
+-- convertir datetime a date
+SELECT DATEPART ( DAYOFYEAR, '2020-10-03') --sin el SELECT para la tabla DimDate?
+-- nro de día del año
+
+usar CAST, ya que DATEPART entrega tipo int
+SELECT CAST((DATEPART(QUARTER,'2020-10-13')-1)/2 +1 AS tinyint) AS BIEN
+SELECT SQL_VARIANT_PROPERTY(CAST((DATEPART(QUARTER,'2020-10-13')-1)/2 +1 AS tinyint),'BaseType')
+
+[Destino de OLE DB [19]] Error: Código de error SSIS DTS_E_OLEDBERROR. Error de OLE DB. Código de error: 0x80040E2F.
+Hay un registro OLE DB disponible. Origen: "Microsoft SQL Server Native Client 10.0" Resultado: 0x80040E2F Descripción: "Se terminó la instrucción.".
+Hay un registro OLE DB disponible. Origen: "Microsoft SQL Server Native Client 10.0" Resultado: 0x80040E2F Descripción: "No se puede insertar el valor NULL en la columna 'DateKey', tabla 'AdvWorks08_Sales_DM.dbo.DimDate'. La columna no admite valores NULL. Error de INSERT.".
+Columna KEY no estaba configurada para iniciar en 1. No acepta valores nulos.

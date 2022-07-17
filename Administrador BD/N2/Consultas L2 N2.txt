@@ -1,0 +1,137 @@
+-----------------
+----FUNCIONES----
+CREATE FUNCTION TotalOrders (@EmpleadoID int) -- Función IdOrden que genera un IdEmpleado
+RETURNS table
+RETURN (SELECT EmployeeID, OrderID FROM dbo.Orders
+	WHERE EmployeeID=@EmpleadoID)
+
+CREATE FUNCTION CostoTotal (@Cantidad smallint, @PrecioUnitario money) -- Función PreciosTotalesporProducto en cada OrdenCompra
+RETURNS money
+AS
+BEGIN
+	DECLARE @PrecioTotal money
+	SET @PrecioTotal=@Cantidad*@PrecioUnitario
+	RETURN @PrecioTotal
+END
+
+CREATE FUNCTION TerritoriesProducts (@Territorio, smallint) -- Función Territorio con más ventas NO SE PUEDE APLICAR EN LA ESTRUCTURA DADA
+RETURNS @TableTerritories table (TerritorioID nvarchar(20), ProductoID int, Cantidad smallint)
+BEGIN
+	INSERT INTO @TableTerritories
+	SELECT TerritoryID FROM dbo.Territories
+	WHERE TerritoryID= @Territorio
+	SELECT ProductID FROM dbo.Products
+	SELECT Quantity FROM dbo.OrderDetails 
+	RETURN
+END
+
+CREATE FUNCTION OrdersByCustomer (@IdCostumer int) -- Función Compras hechas por un Cliente. Tabla está vacía
+RETURNS Table
+RETURN
+(SELECT CustomerID, OrderID FROM Orders
+WHERE CustomerID=@IdCustomer)
+
+CREATE FUNCTION EmployeesByCustomers (@IdEmployee int) --Función Clientes atendidos por un Empleado. SOLO RETORNA EL ID
+RETURNS Table
+RETURN 
+(SELECT EmployeeID, CustomerID FROM Orders
+WHERE EmployeeID=@IdEmployee)
+
+CREATE FUNCTION InfoEmployeesByCustomers (@IdEmployee int) --Función Clientes atendidos por un Empleado. RETORNA NOMBRE. NO PROBADA
+RETURNS @TabCustomersEmployee table(IdEmployee int, IdCustomer nchar(5), NameContact nchar(30))
+AS
+BEGIN
+	INSERT INTO @TabCustomersEmployee
+	SELECT O.EmployeeID, O.CustomerID, C.ContactName
+	FROM Orders AS O
+	JOIN Customers AS C
+	ON C.CustomerID=O.CustomerID
+	WHERE O.EmployeeID=@IdEmployee
+	RETURN
+END
+
+CREATE FUNCTION InforCustomersByEmployees (@IdEmployee int) --Función Clientes atendidos por un Empleado. RETORNA NOMBRE. SI FNC
+RETURNS Table
+RETURN(SELECT O.EmployeeID, O.CustomerID, C.CompanyName
+FROM Orders AS O
+JOIN Customers AS C
+ON C.CustomerID=O.CustomerID
+WHERE O.EmployeeID=@IdEmployee)
+
+CREATE TRIGGER AscProductByEmployee --Trigger le suma Producto Vendido AL Empleado respectivo en TabNueva
+ON [OrderDetails]
+FOR INSERT
+AS
+BEGIN
+	DECLARE @QProducts int, @IdEmployee int, @SellOut int
+	SELECT @QProducts=Quantity FROM inserted
+	SELECT @IdEmployee=EmployeeID FROM Orders
+	INNER JOIN inserted ON inserted.OrderID=Orders.OrderID
+	SELECT @SellOut=TotalQuantity FROM TabNueva WHERE EmployeeID=@IdEmployee
+	UPDATE TabNueva SET TotalQuantity=@QProducts+@SellOut WHERE EmployeeID=@IdEmployee
+END
+
+-------------------
+----EJECUCIONES----
+SELECT * FROM dbo.TotalOrders(5) --Ejecución Función TotalOrders
+
+SELECT OrderID, UnitPrice, Quantity, dbo.CostoTotal(Quantity, UnitPrice) AS PrecioTotal FROM Northwind.dbo.OrderDetails -- Ejecución Función Costo Total
+
+SELECT O.OrderID, O.UnitPrice*O.Quantity AS PrecTot INTO NewTab 
+FROM OrderDetails AS O --Almacena los valores de una tabla (uno de los cuales es calculado) y los guarda en una nueva
+--DROP TABLE NewTab
+
+SELECT OrderID, SUM(UnitPrice*Quantity) AS GranTotal FROM OrderDetails GROUP BY OrderID ORDER BY GranTotal DESC --GrandesTotales de cada Orden
+
+
+--DROP TABLE OrderByEmployee --si existe(?) --GrandesTotales de cada Empleado de Mayor a Menor
+SELECT D.OrderID, D.UnitPrice, D.Quantity, O.EmployeeID, E.FirstName, E.LastName
+INTO OrderByEmployee
+FROM OrderDetails AS D
+	JOIN Orders AS O
+	ON D.OrderID=O.OrderID
+	JOIN Employees AS E
+	ON O.EmployeeID=E.EmployeeID
+SELECT EmployeeID, FirstName, LastName, SUM(UnitPrice*Quantity) AS GranTotal FROM OrderByEmployee GROUP BY EmployeeID, FirstName, LastName ORDER BY GranTotal DESC
+
+SELECT * FROM dbo.OrdersByCustomer(1) --Ejecución Función OrdersByCustomer
+
+SELECT * FROM dbo.InforCustomersByEmployees(9) --Ejecución Función InforCustomersByEmployees
+
+SELECT CustomerID, COUNT(*) AS Compras FROM Orders GROUP BY CustomerID --Total Compras hechas por cada Cliente
+SELECT EmployeeID, COUNT(*) AS Ventas FROM Orders GROUP BY EmployeeID --Total Ventas hechas por cada Empleado
+
+SELECT O.EmployeeID, D.ProductID, P.ProductName, D.Quantity --Totales por producto por Empleado
+INTO ProductsByEmployees
+FROM OrderDetails AS D
+JOIN Products AS P
+ON P.ProductID=D.ProductID
+JOIN Orders AS O
+ON O.OrderID=D.OrderID
+
+SELECT EmployeeID, SUM(Quantity) AS TotalQuantity --Todas las Cantidades de producto sumadas por Empleado
+INTO TabNueva  
+FROM ProductsByEmployees 
+GROUP BY EmployeeID
+ORDER BY EmployeeID ASC
+--ALTER TABLE Employees DROP COLUMN Q_Products
+--ALTER TABLE Employees ADD Q_Products int
+--DROP TABLE ProductsByEmployees
+ALTER TABLE TabNueva
+ADD FOREIGN KEY (EmployeeID) REFERENCES Employees(EmployeeID)
+INSERT INTO Employees
+SELECT     TabNueva.TotalQuantity
+FROM         Employees INNER JOIN
+                      TabNueva ON Employees.EmployeeID = TabNueva.EmployeeID
+
+
+INSERT INTO Orders --Insertar datos donde hay llaves primarias y luego donde están sus foráneas asociadas
+                      (CustomerID, EmployeeID)
+VALUES     ('ANTON', 5) --No se debe poner OrderID, pues es la clave primaria y se genera automáticamente
+
+INSERT INTO OrderDetails
+                      (OrderID, ProductID, UnitPrice, Quantity, Discount)
+VALUES     (n, 77, 13, 3, 0) --Donde n es el OrderID actual en la tabla Orders
+SELECT * [EmployeeID]
+      ,[TotalQuantity]
+  FROM [Northwind].[dbo].[TabNueva]

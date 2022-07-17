@@ -1,0 +1,10 @@
+SELECT DISTINCT
+	YEAR(RequiredDate)*10000+MONTH(RequiredDate)*100+DAY(RequiredDate) AS DateID, 
+	RequiredDate, YEAR(RequiredDate) AS Año, 
+	DATEPART(QUARTER,RequiredDate) AS TrimestreDelAño,
+	MONTH(RequiredDate) AS MesDelAño, 
+	dbo.fn_mes(MONTH(RequiredDate)) AS NombreMes,
+	DAY(RequiredDate) AS DiaDelMes,
+	DATEPART(WEEKDAY,RequiredDate) AS DiaDeLaSemana,
+	dbo.fn_diaSem(DATEPART(WEEKDAY,RequiredDate)) AS NombreDia
+FROM Orders

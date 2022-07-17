@@ -1,0 +1,108 @@
+--procedimiento almacenado que devuelva todos los empleados (nombre y apellidos), 
+--sus puestos y el nombre del departamento al que corresponden a partir de una vista.
+CREATE PROCEDURE InfoEmployeesDepartment
+AS
+SELECT edh.BusinessEntityID, pp.PersonType, pp.FirstName, pp.MiddleName, pp.LastName, e.JobTitle,
+	   d.DepartmentID, d.Name FROM
+HumanResources.EmployeeDepartmentHistory AS edh
+JOIN Person.Person AS pp
+ON edh.BusinessEntityID=pp.BusinessEntityID
+JOIN HumanResources.Employee AS e
+ON edh.BusinessEntityID=e.BusinessEntityID
+JOIN HumanResources.Department AS d
+ON edh.DepartmentID=d.DepartmentID
+GO
+
+EXECUTE InfoEmployeesDepartment
+
+--------------------------------------------------------------------------------------------------
+
+--procedimiento almacenado que sólo devuelva el empleado especificado (nombre y apellidos), 
+--su puesto y el nombre del departamento que corresponde a partir de una vista. Utiliza 
+--parámetros de entrada.
+CREATE PROCEDURE InfoAnEmployeeDepartment @EmployeeID nvarchar(50)
+AS
+SELECT pp.FirstName, pp.MiddleName, pp.LastName, e.JobTitle, d.DepartmentID, d.Name FROM
+HumanResources.EmployeeDepartmentHistory AS edh
+JOIN Person.Person AS pp
+ON edh.BusinessEntityID=pp.BusinessEntityID
+JOIN HumanResources.Employee AS e
+ON edh.BusinessEntityID=e.BusinessEntityIDSELECT     
+WHERE edh.BusinessEntityID=@EmployeeID
+GO
+
+EXECUTE InfoAnEmployeeDepartment 9
+
+---------------------------------------------------------------------------------------------------
+
+--procedimiento almacenado que devuelva una lista de productos con precios que no superen 
+--un importe especificado
+CREATE PROCEDURE LowerThanCost @Cost money
+AS
+BEGIN
+SELECT prpr.ProductID, prpr.Name, ssod.UnitPrice
+FROM Production.Product AS prpr
+INNER JOIN
+Sales.SalesOrderDetail AS ssod
+ON prpr.ProductID = ssod.ProductID
+WHERE ssod.UnitPrice<=@Cost
+END
+
+EXECUTE LowerThanCost 300
+
+-----------------------------------------------------------------------------------------------------
+
+--transacción que haga un INSERT y un UPDATE a las tablas HumanResourses.Employee, agrega
+--una condicional de error que entregue mensajes de ERROR o de BIEN si se hizo un ROLLBACK
+--o un COMMIT respectivamente.
+BEGIN TRANSACTION
+UPDATE HumanResources.Employee SET Gender='M' WHERE BusinessEntityID=1
+INSERT INTO HumanResources.Employee (BusinessEntityID, NationalIDNumber,
+LoginID, JobTitle, BirthDate, MaritalStatus, Gender, HireDate, SalariedFlag,
+VacationHours, SickLeaveHours, CurrentFlag, rowguid, ModifiedDate) 
+VALUES (2, '3', 'ratara6','Engineer','1988-01-09','S','M','2015-01-09',1,50,
+8,1,'dd9ad278-ed17-40cf-8619-baf1bb9d1cf4','20040731 00:00:00')
+IF(@@ERROR<>0)
+	BEGIN
+	ROLLBACK
+	PRINT('ERROR')
+	END
+	ELSE
+		BEGIN
+		COMMIT
+		PRINT ('BIEN')
+		END
+--Esta transacción arroja un error (ya que BusinessEntityID=2 ya existe!)--
+
+------------------------------------------------------------------------------------------------------
+
+--transacción dentro de un procedimiento almacenado que realice un INSERT a la tabla
+--de Production.Products, el procedimiento debe tener parámetros de entrada y la 
+--transacción debe entregar mensajes de ERROR o de BIEN si se hizo un ROLLBACK o un 
+--COMMIT respectivamente.
+CREATE PROCEDURE InsertProduct @ProductID int, @Name nvarchar(50), @ProductNumber nvarchar(25), @MakeFlag bit,
+@FinishedGoodsFlag bit, @SafetyStockLevel smallint, @ReorderPoint smallint, @StandardCost money, @ListPrice money, 
+@DaysToManufacture int, @SellStartDate datetime, @rowguid uniqueidentifier, @ModifiedDate datetime							
+AS
+BEGIN
+BEGIN TRANSACTION 
+INSERT INTO Production.Product (ProductID, Name, ProductNumber, MakeFlag, FinishedGoodsFlag, SafetyStockLevel, ReorderPoint,
+StandardCost, ListPrice, DaysToManufacture, SellStartDate, rowguid, ModifiedDate) 
+VALUES (@ProductID, @Name, @ProductNumber, @MakeFlag, @FinishedGoodsFlag, @SafetyStockLevel, @ReorderPoint, @StandardCost,
+@ListPrice, @DaysToManufacture, @SellStartDate, @rowguid, @ModifiedDate)
+IF(@@ERROR<>0)
+	BEGIN
+	ROLLBACK
+	PRINT('ERROR')
+	END
+	ELSE
+		BEGIN
+		COMMIT
+		PRINT ('BIEN')
+		END
+END
+
+SET IDENTITY_INSERT Production.Product ON --Activarse la inserción en ID
+EXECUTE InsertProduct 1000, 'Prueba', 7777777, 1, 1, 600, 300, 11111, 22222, 
+3, '20040731 00:00:00', 'AE638923-2B67-4679-B90E-ABBAB17DCA32', '20200930 00:00:00'
+ojo: no se pueden duplicar: Name, ProductNumber, rowguid

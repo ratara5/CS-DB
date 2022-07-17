@@ -1,0 +1,64 @@
+--consulta que te muestre como resultado el Id (ProductId) y nombre (ProductName) de los productos 
+--que un cliente (Costumer)  haya ordenado sin que los productos se repitan.
+
+SELECT DISTINCT O.CustomerID, D.ProductID, P.ProductName
+FROM OrderDetails AS D 
+JOIN Orders AS O 
+ON D.OrderID = O.OrderID 
+JOIN Products AS P ON D.ProductID = P.ProductID
+
+--------------------------------------------------------------------------------------------------
+
+--consulta que muestre los registros de las órdenes (Orders) realizadas por clientes (Costumers)
+--que provengan de ‘Mexico’ (Country) con subconsulta.
+
+SELECT Orders.CustomerID, Orders.OrderID, Customers.CompanyName, Customers.Country
+FROM Customers INNER JOIN
+Orders ON Customers.CustomerID = Orders.CustomerID
+WHERE 'Mexico' IN (SELECT Country FROM Customers WHERE Customers.CustomerID = Orders.CustomerID)
+
+-------------------------------------------------------------------------------------------------
+
+--Escribe una consulta que muestre como resultado los registros de los empleados (Employee) 
+--que pertenezcan a la región ‘Northern’ (RegionDescription) con subconsulta.
+--Cómo si las tablas no están enlazadas?!
+
+SELECT EmployeeID, Region
+FROM Employees
+WHERE Region='Northern'
+
+--------------------------------------------------------------------------------------------------
+
+--Escribe una consulta que muestre como resultado el total de CADA UNO DE LOS productos que existen en stock por 
+--categoría (CategoryName) y ordénalos por el id de categoría (CategoryId).
+SELECT C.CategoryID, C.CategoryName, P.ProductID, P.UnitsInStock
+FROM Categories AS C 
+JOIN Products AS P
+ON C.CategoryID=P.CategoryID
+ORDER BY CategoryID
+
+--------------------------------------------------------------------------------------------------
+
+--Escribe una consulta que muestre como resultado el total de TODOS LOS productos que existen en stock por 
+--categoría (CategoryName) y ordénalos por el id de categoría (CategoryId)
+SELECT C.CategoryID, C.CategoryName, SUM(P.UnitsInStock) AS Total 
+FROM Categories AS C 
+JOIN Products AS P
+ON C.CategoryID=P.CategoryID
+GROUP BY C.CategoryID, C.CategoryName
+ORDER BY C.CategoryID ASC
+
+--------------------------------------------------------------------------------------------------
+
+--consulta que guarde en una tabla nueva el total de productos que existen en el stock agrupados 
+--por categorías (CategoryName) y ordenados por el id de la categoría (CategoryId).  Llama a la
+--tabla llámala ProductosEnStock. 
+SELECT C.CategoryID, C.CategoryName, SUM(P.UnitsInStock) AS Total 
+INTO ProductsInStock
+FROM Categories AS C 
+JOIN Products AS P
+ON C.CategoryID=P.CategoryID
+GROUP BY C.CategoryID, C.CategoryName
+ORDER BY C.CategoryID ASC
+
+SELECT * FROM ProductsInStock

@@ -1,0 +1,32 @@
+Ya que sin DELETE la clave de DimProducts (EProducts) continúa incrementándose 
+así se eliminen los registros en SQL SERVER MANAGEMENT STUDIO
+Ya que el primer DELETE debe hacer que DimProducts cargue correctamente
+Ya que el segundo DELETE no servirá
+
+1RA VEZ
+DELETE DimCustomer;
+DELETE DimEmployee;
+DELETE DimProduct;
+DELETE DimTime;
+TRUNCATE TABLE FactSales;
+
+----------------------------------------------------------------------------
+2DA VEZ
+EXEC sp_MSForEachTable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL'
+GO
+EXEC sp_MSForEachTable 'ALTER TABLE ? DISABLE TRIGGER ALL'
+GO
+EXEC sp_MSForEachTable 'BEGIN TRY
+TRUNCATE TABLE ?
+END TRY
+BEGIN CATCH
+DELETE FROM ?
+END CATCH;'
+EXEC sp_MSForEachTable 'ALTER TABLE ? CHECK CONSTRAINT ALL'
+GO
+EXEC sp_MSForEachTable 'ALTER TABLE ? ENABLE TRIGGER ALL'
+GO
+DBCC CHECKIDENT (DimProducts, RESEED,0) 
+DBCC CHECKIDENT (DimCustomer, RESEED,0)
+DBCC CHECKIDENT (DimEmployee, RESEED,0)
+DBCC CHECKIDENT (DimTime, RESEED,0)

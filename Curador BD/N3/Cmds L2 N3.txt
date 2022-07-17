@@ -1,0 +1,4 @@
+CREATE DATABASE sistemas;
+CREATE TABLE sistemas.equipos(id_equipo INT(10), modelo VARCHAR(50), marca VARCHAR(50), descripcion VARCHAR(50));
+CREATE TABLE sistemas.problemas(id_problema INT(10), id_equipo INT(10), id_usuario INT(10), tecnico VARCHAR(50), descripcion VARCHAR(50));
+CREATE TABLE sistemas.usuarios(id_usuarui INT(10), nombre VARCHAR(50), apellido VARCHAR(50), telefono INT(20));
